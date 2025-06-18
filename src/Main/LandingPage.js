@@ -100,9 +100,9 @@ const features = [
 
     const stats = [
         { value: "400+", label: "Patients" },
-        { value: "120000+", label: "Home Care Visits" },
-        { value: "500+", label: "Volenterrs" },
-        { value: "10+", label: "Trained Professionals" }
+        { value: "29,0000+", label: "Home Care Visits" },
+        { value: "300+", label: "Volenterrs" },
+        { value: "2,000+", label: "Reports" }
     ];
 
     return (
@@ -218,6 +218,26 @@ const features = [
         <div className="story-grid">
             {/* Story 1 - App Launch */}
             <div className="story-card">
+             {/* Story 3 - Impact Video */}
+            <div className="story-card full-width">
+                <div className="story-media">
+                    <div className="video-wrapper">
+                        <iframe 
+                            src="https://www.youtube.com/embed/bWC2LIubqRQ" 
+                            title="Patient Impact Stories" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowFullScreen
+                        ></iframe>
+                    </div>
+                </div>
+                {/* <div className="story-content center">
+                    <h3>Hear From Those We've Helped</h3>
+                    <p>
+                        Watch how our technology has improved the quality of care for patients and eased the workload 
+                        for healthcare providers in rural communities.
+                    </p>
+                </div> */}
+            </div>
                 <div className="story-media">
                     <div className="video-wrapper">
                         <iframe 
@@ -261,26 +281,7 @@ const features = [
                 </div>
             </div>
 
-            {/* Story 3 - Impact Video */}
-            <div className="story-card full-width">
-                <div className="story-media">
-                    <div className="video-wrapper">
-                        <iframe 
-                            src="https://www.youtube.com/embed/bWC2LIubqRQ" 
-                            title="Patient Impact Stories" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowFullScreen
-                        ></iframe>
-                    </div>
-                </div>
-                {/* <div className="story-content center">
-                    <h3>Hear From Those We've Helped</h3>
-                    <p>
-                        Watch how our technology has improved the quality of care for patients and eased the workload 
-                        for healthcare providers in rural communities.
-                    </p>
-                </div> */}
-            </div>
+           
         </div>
     </div>
 </section>
