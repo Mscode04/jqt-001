@@ -1,8 +1,8 @@
 {
   "name": "palliative-web-app",
-  "homepage": "https://Mscode04.github.io/neuraq-care-mkba-og-001",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://pmkba.neuraq.in",
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -38,6 +38,9 @@
     "web-vitals": "^4.2.4",
     "xlsx": "^0.18.5"
   },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -63,8 +66,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "gh-pages": "^6.3.0"
   }
 }

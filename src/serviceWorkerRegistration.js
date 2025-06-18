@@ -1,9 +1,8 @@
-
-
-const isLocalhost = Boolean(
-  window.location.hostname === 'localhost' || // Check for localhost
-  window.location.hostname === '[::1]' || // Check for IPv6 localhost
-  window.location.hostname.match(/^127(\.\d{1,3}){3}$/) // Check for IPv4 localhost
+const isAllowedDomain = Boolean(
+  window.location.hostname === 'localhost' || // localhost
+  window.location.hostname === '[::1]' || // IPv6 localhost
+  window.location.hostname.match(/^127(\.\d{1,3}){3}$/) || // IPv4 localhost
+  window.location.hostname === 'pmkba.neuraq.in' // custom domain
 );
 
 export function register(config) {
@@ -17,18 +16,17 @@ export function register(config) {
     window.addEventListener('load', () => {
       const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
 
-      if (isLocalhost) {
-        // Check if the service worker exists on localhost
+      if (isAllowedDomain) {
+        // Check if the service worker exists on allowed domains
         checkValidServiceWorker(swUrl, config);
 
-        // Log a message for localhost
         navigator.serviceWorker.ready.then(() => {
           console.log(
             'This web app is being served cache-first by a service worker.'
           );
         });
       } else {
-        // Register the service worker for production
+        // Register the service worker for other production domains
         registerValidSW(swUrl, config);
       }
     });
@@ -47,7 +45,7 @@ function registerValidSW(swUrl, config) {
         installingWorker.onstatechange = () => {
           if (installingWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
-              // New content is available; force refresh
+              // New content is available; please refresh
               console.log('New content is available; please refresh.');
               if (config && config.onUpdate) {
                 config.onUpdate(registration);
@@ -75,14 +73,14 @@ function checkValidServiceWorker(swUrl, config) {
         response.status === 404 ||
         response.headers.get('content-type').indexOf('javascript') === -1
       ) {
-        // No service worker found or invalid content type
+        // No service worker found or wrong content type
         navigator.serviceWorker.ready.then((registration) => {
           registration.unregister().then(() => {
             window.location.reload();
           });
         });
       } else {
-        // Service worker found; proceed with registration
+        // Service worker found
         registerValidSW(swUrl, config);
       }
     })
@@ -98,10 +96,3 @@ export function unregister() {
     });
   }
 }
-
-
-
-
-
-
-
