@@ -100,7 +100,7 @@ const features = [
 
     const stats = [
         { value: "400+", label: "Patients" },
-        { value: "29,0000+", label: "Home Care Visits" },
+        { value: "29,000+", label: "Home Care Visits" },
         { value: "300+", label: "Volenterrs" },
         { value: "2,000+", label: "Reports" }
     ];
