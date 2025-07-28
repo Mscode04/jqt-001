@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../Firebase/config";
-import { collection, query, where, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, deleteDoc, Timestamp } from "firebase/firestore";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -19,54 +19,71 @@ const ReportsPage = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [reportToDelete, setReportToDelete] = useState(null);
   const [pin, setPin] = useState("");
-  const [sortOrder, setSortOrder] = useState("desc"); // Default to descending
-  const [showFilters, setShowFilters] = useState(false); // Default to hidden
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [showFilters, setShowFilters] = useState(false);
 
   const reportsPerPage = 22;
 
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const reportsRef = collection(db, "Reports");
-        let q = query(reportsRef, where("patientId", "==", patientId));
+      const reportsRef = collection(db, "Reports");
+      let q = query(reportsRef, where("patientId", "==", patientId));
 
-        if (startDate) {
-          q = query(q, where("submittedAt", ">=", new Date(startDate)));
-        }
-        if (endDate) {
-          q = query(q, where("submittedAt", "<=", new Date(endDate)));
-        }
-        if (typeFilter) {
-          q = query(q, where("formType", "==", typeFilter));
-        }
-
-        const querySnapshot = await getDocs(q);
-        let reportsData = querySnapshot.docs.map((doc) => ({
+      // Get all reports first
+      const querySnapshot = await getDocs(q);
+      let reportsData = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        // Convert Firestore Timestamp to JavaScript Date
+        const submittedAt = data.submittedAt?.toDate 
+          ? data.submittedAt.toDate() 
+          : new Date(data.submittedAt);
+        
+        return {
           id: doc.id,
-          ...doc.data(),
-        }));
+          ...data,
+          submittedAt,
+          // Add date string for easy filtering (YYYY-MM-DD format)
+          submittedDate: submittedAt.toISOString().split('T')[0]
+        };
+      });
 
-        // Sort reports based on sortOrder
-        reportsData.sort((a, b) => {
-          const dateA = new Date(a.submittedAt);
-          const dateB = new Date(b.submittedAt);
-          return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      // Apply client-side date filtering
+      if (startDate || endDate) {
+        reportsData = reportsData.filter(report => {
+          const reportDate = report.submittedDate;
+          const start = startDate || '1970-01-01'; // Default to earliest possible date
+          const end = endDate || '9999-12-31'; // Default to far future date
+          return reportDate >= start && reportDate <= end;
         });
-
-        setReports(reportsData);
-      } catch (error) {
-        console.error("Error fetching reports: ", error);
-        setError("Failed to load reports. Please try again later.");
-      } finally {
-        setLoading(false);
       }
-    };
 
-    fetchReports();
-  }, [patientId, startDate, endDate, typeFilter, sortOrder]); // Add sortOrder to dependencies
+      // Apply type filter if selected
+      if (typeFilter) {
+        reportsData = reportsData.filter(report => report.formType === typeFilter);
+      }
+
+      // Sort reports
+      reportsData.sort((a, b) => {
+        return sortOrder === "asc" 
+          ? a.submittedAt - b.submittedAt 
+          : b.submittedAt - a.submittedAt;
+      });
+
+      setReports(reportsData);
+    } catch (error) {
+      console.error("Error fetching reports: ", error);
+      setError("Failed to load reports. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchReports();
+}, [patientId, startDate, endDate, typeFilter, sortOrder]);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -132,6 +149,238 @@ const ReportsPage = () => {
     setPin("");
   };
 
+  const addSectionHeader = (printWindow, text) => {
+    printWindow.document.write(`<div class="section-header">${text}</div>`);
+  };
+
+  const addTable = (printWindow, data) => {
+    printWindow.document.write(`
+      <table>
+        <tbody>
+          ${data.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("")}
+        </tbody>
+      </table>
+    `);
+  };
+
+  const handlePrintAll = async () => {
+    if (reports.length === 0) {
+      toast.warning("No reports to print");
+      return;
+    }
+
+    // Use the already filtered reports from state
+    const reportsToPrint = reports.filter(report => 
+      report.formType === "NHC" || 
+      report.formType === "NHC(E)" || 
+      report.formType === "DHC"
+    );
+
+    if (reportsToPrint.length === 0) {
+      toast.warning("No NHC/NHC(E)/DHC reports to print in the selected date range");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>NHC/DHC Reports - ${patientId}</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0;
+              padding: 0;
+              font-size: 12px;
+            }
+            .page {
+              page-break-after: always;
+              padding: 1cm;
+              height: 100%;
+            }
+            .page:last-child {
+              page-break-after: auto;
+            }
+            h1 { 
+              font-size: 18px; 
+              color: #283593; 
+              margin-bottom: 20px; 
+              text-align: center;
+            }
+            h2 {
+              font-size: 16px;
+              color: #283593;
+              margin-bottom: 15px;
+              text-align: center;
+            }
+            h3 {
+              font-size: 14px;
+              margin-bottom: 10px;
+            }
+            .section-header { 
+              font-size: 14px; 
+              font-weight: bold; 
+              background-color: #f0f0f0; 
+              padding: 5px; 
+              margin-top: 15px;
+              margin-bottom: 5px;
+              border-bottom: 1px solid #ddd;
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-bottom: 10px;
+              page-break-inside: avoid;
+            }
+            table, th, td { 
+              border: 1px solid #ddd; 
+            }
+            th, td { 
+              padding: 6px; 
+              text-align: left; 
+              font-size: 11px;
+            }
+            th { 
+              background-color: #f5f5f5; 
+            }
+            tr:nth-child(even) { 
+              background-color: #f9f9f9; 
+            }
+            @page {
+              size: A4;
+              margin: 1cm;
+            }
+            @media print {
+              body { 
+                margin: 0;
+                padding: 0;
+              }
+              .page {
+                margin: 0;
+                padding: 1cm;
+                box-shadow: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>NHC/DHC Reports for Patient ID: ${patientId}</h1>
+          <p style="text-align: center;">
+            Showing ${reportsToPrint.length} reports 
+            ${startDate || endDate ? `(Filtered: ${startDate ? `From ${new Date(startDate).toLocaleDateString()}` : ''} ${endDate ? `To ${new Date(endDate).toLocaleDateString()}` : ''})` : ''}
+            (Printed on ${new Date().toLocaleDateString()})
+          </p>
+    `);
+
+    reportsToPrint.forEach((report, index) => {
+      printWindow.document.write(`
+        <div class="page">
+          <h2>${report.formType} Report ${index + 1}</h2>
+          <h3>Patient: ${report.name || "No Name"}</h3>
+          <p><strong>Date:</strong> ${report.submittedAt ? new Date(report.submittedAt).toLocaleString() : "N/A"}</p>
+      `);
+
+      // Common fields for all reports
+      addSectionHeader(printWindow, "Basic Information");
+      addTable(printWindow, [
+        ["Reg No", report.registernumber || "N/A"],
+        ["Reported BY", report.team1 || "N/A"],
+        ["Date", report.date || "N/A"],
+        ["Patient Name", report.name || "N/A"],
+        ["Age", report.age || "N/A"],
+        ["Address", report.address || "N/A"],
+        ["Main Diagnosis", report.mainDiagnosis || "N/A"],
+      ]);
+
+      // First Impression
+      addSectionHeader(printWindow, "First Impression");
+      addTable(printWindow, [["First Impressions", report.firstImpression || "N/A"]]);
+
+      // Basic Matters
+      addSectionHeader(printWindow, "Basic Matters");
+      addTable(printWindow, [["Basic Matters Notes", report.basicMattersNotes || "N/A"]]);
+
+      // General Matters
+      addSectionHeader(printWindow, "General Matters");
+      addTable(printWindow, [
+        ["General Status", report.generalStatus || "N/A"],
+        ["Patient Currently", report.patientCurrently || "N/A"],
+        ["Activity Score", report.activityScore || "N/A"],
+        ["Add More General", report.addmoregeneral || "N/A"],
+      ]);
+
+      // Vital Signs
+      addSectionHeader(printWindow, "Vital Signs");
+      addTable(printWindow, [
+        ["BP", `${report.bp || "N/A"} mmHg - ${report.ulLl || ""} - ${report.position || ""}`],
+        ["RR", `${report.rr || ""} Mt - ${report.rrType || ""}`],
+        ["Pulse", `${report.pulse || ""} Mt - ${report.pulseType || ""}`],
+        ["Temperature", `${report.temperature || ""} °F - ${report.temperatureType || ""}`],
+        ["SpO2", `${report.spo2 || ""} %`],
+        ["GCS", `${report.gcs || ""} /15`],
+        ["GRBS", `${report.grbs || ""} mg/dl`],
+      ]);
+
+      // Summary Discussion
+      addSectionHeader(printWindow, "Summary Discussion");
+      if (report.formType === "DHC") {
+        addTable(printWindow, [
+          ["Discussion and Management", report.summaryDiscussion || "N/A"],
+          ["Special Care Areas", report.specialCareAreas || "N/A"],
+          ["ComplimentaryRx", report.complimentaryRx || "N/A"],
+          ["Medicine Changes", report.medicineChanges || "N/A"],
+          ["Other Activities", report.otherActivities || "N/A"],
+          ["Home Care Plan", report.homeCarePlan || "N/A"],
+          ["Medical Examination", report.consultation || "N/A"],
+        ]);
+      } else {
+        addTable(printWindow, [
+          ["Summary Discussion", report.summaryDiscussion || "N/A"],
+          ["Special Care Areas", report.specialCareAreas || "N/A"],
+          ["Medicine Changes", report.medicineChanges || "N/A"],
+          ["Other Activities", report.otherActivities || "N/A"],
+          ["Home Care Plan", report.homeCarePlan || "N/A"],
+          ["Doctor Consultation / DHC", report.consultation || "N/A"],
+        ]);
+      }
+
+      // Miscellaneous
+      addSectionHeader(printWindow, "Miscellaneous");
+      addTable(printWindow, [
+        ["Form Type", report.formType || "N/A"],
+        ["Registration Date", report.registrationDate || "N/A"],
+        ["Submitted At", report.submittedAt ? new Date(report.submittedAt).toLocaleString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        }) : "N/A"],
+        ["Team 1", report.team1 || "N/A"],
+        ["Team 2", report.team2 || "N/A"],
+        ["Team 3", report.team3 || "N/A"],
+        ["Team 4", report.team4 || "N/A"],
+      ]);
+
+      printWindow.document.write(`</div>`);
+    });
+
+    printWindow.document.write(`</body></html>`);
+    printWindow.document.close();
+
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+  };
+
+  const clearFilters = () => {
+    setStartDate("");
+    setEndDate("");
+    setTypeFilter("");
+  };
+
   return (
     <div className="reports-page-container">
       <ToastContainer
@@ -154,28 +403,32 @@ const ReportsPage = () => {
       </div>
       <h2 className="text-white">Reports ({reports.length})</h2>
 
-      {/* Filter Icon */}
       <div className="filter-icon-container">
         <button onClick={() => setShowFilters(!showFilters)} className="filter-icon">
           {showFilters ? "Hide Filters" : "Filters"}
         </button>
       </div>
 
-      {/* Filter Section (Conditionally Rendered) */}
       {showFilters && (
         <div className="filters-container">
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            placeholder="Start Date"
-          />
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            placeholder="End Date"
-          />
+          <div className="date-filter">
+  {/* <label>From:</label> */}
+  <input
+    type="date"
+    value={startDate}
+    onChange={(e) => setStartDate(e.target.value)}
+    max={endDate || undefined}
+  />
+</div>
+<div className="date-filter">
+  {/* <label>To:</label> */}
+  <input
+    type="date"
+    value={endDate}
+    onChange={(e) => setEndDate(e.target.value)}
+    min={startDate || undefined}
+  />
+</div>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -198,6 +451,19 @@ const ReportsPage = () => {
             <option value="desc">Newest First</option>
             <option value="asc">Oldest First</option>
           </select>
+          <button
+            onClick={handlePrintAll}
+            className="print-all-button btn-warning p-2 btn "
+            disabled={reports.length === 0}
+          >
+            Print All
+          </button>
+          <button
+            onClick={clearFilters}
+            className="clear-filters-button btn-info p-2 btn"
+          >
+            Clear
+          </button>
         </div>
       )}
 
@@ -227,15 +493,15 @@ const ReportsPage = () => {
                 <p>
                   {report.submittedAt
                     ? new Date(report.submittedAt).toLocaleString("en-US", {
-                        weekday: "short",
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "numeric",
-                        second: "numeric",
-                        hour12: true,
-                      })
+                      weekday: "short",
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "numeric",
+                      second: "numeric",
+                      hour12: true,
+                    })
                     : "No date available"}
                 </p>
                 <p>{report.name || "No Name"}</p>

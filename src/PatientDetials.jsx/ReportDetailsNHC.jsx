@@ -419,8 +419,6 @@ const ReportDetailsNHC = () => {
     addSectionHeader("Basic Matters");
     addTable([
       ["Basic Matters Notes", report.basicMattersNotes || "N/A"],
-      
-      
     ]);
     printWindow.document.write('</div>');
   

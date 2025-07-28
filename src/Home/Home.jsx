@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../Firebase/config"; // Your Firebase config file
+import { db } from "../Firebase/config";
 import { collection, getDocs } from "firebase/firestore";
 import "./Home.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Link, useNavigate } from "react-router-dom";
+import vid1 from "../assets/nurese-home.mp4";
 
 function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -43,7 +44,9 @@ function Home() {
         setReports(filteredReports);
 
         // Extract unique reporters
-        const reporters = [...new Set(filteredReports.map((report) => report.team1))];
+        const reporters = [
+          ...new Set(filteredReports.map((report) => report.team1)),
+        ];
         setUniqueReporters(["All", ...reporters]);
       } catch (error) {
         console.error("Error fetching data: ", error);
@@ -84,9 +87,10 @@ function Home() {
     setSelectedReporter(event.target.value);
   };
 
-  const filteredReports = selectedReporter === "All"
-    ? reports
-    : reports.filter((report) => report.team1 === selectedReporter);
+  const filteredReports =
+    selectedReporter === "All"
+      ? reports
+      : reports.filter((report) => report.team1 === selectedReporter);
 
   return (
     <div className="HomeApp">
@@ -103,11 +107,11 @@ function Home() {
           <i className="bi bi-arrow-left"></i>
         </button>
         <div className="drawer-content">
-          {/* <Link to="/main/auto-list" className="HomeDrawerButton">
-          AUTO SCHEDULE
-          </Link> */}
+          <Link to="/main/auto-list" className="HomeDrawerButton">
+            Auto Schedule
+          </Link>
           <Link to="/main/shameema-list" className="HomeDrawerButton">
-          SHAMEEMA
+            SHAMEEMA
           </Link>
           <Link to="/main/divya-list" className="HomeDrawerButton">
             DIVYA
@@ -128,31 +132,42 @@ function Home() {
           </Link>
         </div>
         <div className="drawer-footer">
-          <button className="HomeDrawerButton btn-danger" onClick={handleLogout}>
+          <button
+            className="HomeDrawerButton btn-danger"
+            onClick={handleLogout}
+          >
             Logout
           </button>
           <div className="powered-by">Powered by Neuraq Technologies</div>
         </div>
       </div>
 
-      {/* Banner Section */}
+      {/* Banner Section with Video Background and White Overlay */}
       <div className="HomeBanner">
-        <div className="hero-name">
-        <h1 style={{ color: "#1e506b" }} className="">Dashboard</h1>
+        {/* Video Background */}
+        <video className="video-background" autoPlay loop muted playsInline>
+          <source src={vid1} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        {/* White Overlay */}
+        <div className="video-overlay"></div>
+
+        {/* Content overlay */}
+        <div className="banner-content">
+          <div className="hero-name">
+            <h1 style={{ color: "#1e506bff" }} className="pb-3">
+              Nurse Dashboard
+            </h1>
+          </div>
         </div>
-        {/* <div className="HomeBannerButtons">
-          <Link to="/main/addpt" className="HomeBannerButton">
-            Register New Patients
-          </Link>
-          <Link to="/main/allrepots" className="HomeBannerButton">
-            Patients Reports
-          </Link>
-        </div> */}
       </div>
 
       {/* Reports Section */}
       <div className="HomeReports filter-section">
-        <h4 className="HomeReportsTitle">Today ({filteredReports.length})  <select
+        <h4 className="HomeReportsTitle">
+          Today ({filteredReports.length})
+          <select
             id="reporter-filter"
             className="filter-section"
             value={selectedReporter}
@@ -163,8 +178,9 @@ function Home() {
                 {reporter}
               </option>
             ))}
-          </select></h4> 
-      
+          </select>
+        </h4>
+
         {loading ? (
           <div className="loading-container">
             <img
@@ -184,15 +200,20 @@ function Home() {
                 key={report.id}
               >
                 <div className="HomeReportCard">
-                  <img src="https://www.csdtitsolution.com/images/blogs/Chapitre_2.gif" alt="" />
+                  <img
+                    src="https://www.csdtitsolution.com/images/blogs/Chapitre_2.gif"
+                    alt=""
+                  />
                   <div className="HomeReportInfo">
-                    <h5>{report.formType} : {report.name} </h5>
+                    <h5>
+                      {report.formType} : {report.name}{" "}
+                    </h5>
                     <p></p>
-                  <small>
-  {new Date(report.submittedAt).toLocaleString()} - REPORTED BY {"  "}
-  <span style={{ color: "#000" }}>{report.team1}</span>
-</small>
-
+                    <small>
+                      {new Date(report.submittedAt).toLocaleString()} - REPORTED
+                      BY {"  "}
+                      <span style={{ color: "#000" }}>{report.team1}</span>
+                    </small>
                   </div>
                 </div>
               </Link>
