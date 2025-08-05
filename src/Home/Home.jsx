@@ -145,12 +145,12 @@ function Home() {
       {/* Banner Section with Video Background and White Overlay */}
       <div className="HomeBanner">
         {/* Video Background */}
-        <video className="video-background" autoPlay loop muted playsInline>
+        {/* <video className="video-background" autoPlay loop muted playsInline>
           <source src={vid1} type="video/mp4" />
           Your browser does not support the video tag.
-        </video>
+        </video> */}
 
-        {/* White Overlay */}
+        
         <div className="video-overlay"></div>
 
         {/* Content overlay */}

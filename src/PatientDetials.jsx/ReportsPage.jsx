@@ -191,54 +191,59 @@ const ReportsPage = () => {
               font-family: Arial, sans-serif; 
               margin: 0;
               padding: 0;
-              font-size: 12px;
+              font-size: 10px; /* <-- Change this number to make all text bigger/smaller */
             }
             .page {
               page-break-after: always;
-              padding: 1cm;
-              height: 100%;
+              padding: 0.5cm; /* <-- Change this for more/less page padding */
+              height: 27.7cm;
+              box-sizing: border-box;
+              overflow: hidden;
+              width: 19cm;
+              margin: 0 auto;
             }
             .page:last-child {
               page-break-after: auto;
             }
             h1 { 
-              font-size: 18px; 
+              font-size: 13px; /* <-- Change this for the main title size */
               color: #283593; 
-              margin-bottom: 20px; 
+              margin-bottom: 10px; 
               text-align: center;
             }
             h2 {
-              font-size: 16px;
+              font-size: 11px; /* <-- Change this for report section title size */
               color: #283593;
-              margin-bottom: 15px;
+              margin-bottom: 7px;
               text-align: center;
             }
             h3 {
-              font-size: 14px;
-              margin-bottom: 10px;
+              font-size: 10px; /* <-- Change this for sub-section title size */
+              margin-bottom: 5px;
             }
             .section-header { 
-              font-size: 14px; 
+              font-size: 9px; /* <-- Change this for section header size */
               font-weight: bold; 
               background-color: #f0f0f0; 
-              padding: 5px; 
-              margin-top: 15px;
-              margin-bottom: 5px;
+              padding: 3px; /* <-- Change this for section header padding */
+              margin-top: 7px;
+              margin-bottom: 3px;
               border-bottom: 1px solid #ddd;
             }
             table { 
               width: 100%; 
               border-collapse: collapse; 
-              margin-bottom: 10px;
+              margin-bottom: 5px;
               page-break-inside: avoid;
+              font-size: 9px; /* <-- Change this for table text size */
             }
             table, th, td { 
               border: 1px solid #ddd; 
             }
             th, td { 
-              padding: 6px; 
+              padding: 3px 5px; /* <-- Change these numbers for table cell padding */
               text-align: left; 
-              font-size: 11px;
+              font-size: 9px; /* <-- Change this for table cell text size */
             }
             th { 
               background-color: #f5f5f5; 
@@ -257,8 +262,15 @@ const ReportsPage = () => {
               }
               .page {
                 margin: 0;
-                padding: 1cm;
+                padding: 0.5cm;
                 box-shadow: none;
+                height: 27.7cm;
+                width: 19cm;
+                overflow: hidden;
+                page-break-after: always;
+              }
+              .page:last-child {
+                page-break-after: auto;
               }
             }
           </style>

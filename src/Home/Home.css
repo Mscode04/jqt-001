@@ -132,13 +132,16 @@
 /* Update HomeBanner to ensure proper stacking */
 .HomeBanner {
   position: relative;
-  height: 300px;
+  height: 280px; /* smaller height as requested earlier */
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background-image: url('../assets/img/home-banner-nurse.jpg'); /* <-- Set your image path here */
+  background-size: cover;
+  background-position: center;
 }
 
 /* Update hero-name to work better with overlay */
